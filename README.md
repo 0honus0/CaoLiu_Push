@@ -3,7 +3,7 @@
 
 1.使用方法  
 
-<1> 补全 Bot_Token Chat_Id  
+<1> 补全 Bot_Token , Chat_Id  
 
 <2> npm install  
 
