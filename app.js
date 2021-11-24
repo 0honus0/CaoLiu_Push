@@ -1,7 +1,7 @@
 /*
  * @Author: honus
  * @Date: 2021-11-13 23:43:19
- * @LastEditTime: 2021-11-24 20:52:07
+ * @LastEditTime: 2021-11-24 21:35:43
  * @LastEditors: honus
  * @Description: 
  * @FilePath: /CaoLiuPush/app.js
@@ -20,7 +20,7 @@ const base_url='https://t66y.com/'
 const Bot_Token=""
 const Chat_Id=''
 const User_Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
-const Cookie=''
+const Cookie='P'
 var publish={'tid':0};
 var flag=1
 var key=0
@@ -102,7 +102,7 @@ function main(){
                         time=$(this).find('div[class="f12"] span').attr('title');
                         time=date+' '+time;
                     };
-                    tmp_list.push({'article_url':(base_url+article_url),'time':time,'forum':res.options.forum,'title':title,'author':author,'author_url':(base_url+author_url),'fid':res.options.fid});            
+                    tmp_list.push({'article_url':(base_url+article_url),'time':time,'forum':res.options.forum,'title':title,'author':author,'author_url':(base_url+author_url),'fid':res.options.fid,'tid':getTid(article_url)});            
                 });
             };
             done();
@@ -112,12 +112,11 @@ function main(){
     c.on('drain',function(){
         logger.info('Get data success')
         tmp_list.sort(function(a,b){
-                tid_x=getTid(a['article_url'])
-                tid_y=getTid(b['article_url'])
-                return tid_x <= tid_y ? 1:-1
+                return a['tid'] <= b['tid'] ? 1:-1
         })
         //logger.info(tmp_list)
         let maxNumber=getMax(tmp_list)
+        logger.info('current max tid:' + maxNumber)
         tmp_list=Array.from(new Set(tmp_list))
         let tmp_list_filter=[]
         tmp_list.reverse()
@@ -150,7 +149,7 @@ function main(){
             logger.info((length-tmp_list.length)+'/'+length,tmp['article_url'])
         },4000);
     });
-
+    //两遍是为了防止遗漏，奇怪的bug，等等想办法用别的方法解决吧
     c.queue([
     {
         headers:{'User-Agent': User_Agent,'cookie': Cookie},
@@ -312,11 +311,15 @@ function main(){
 }
 
 function getMax(e){
-    e.sort((a,b)=>{return a-b})
     let value=-1
-    while(-value <= e.length){
-        key=e.slice(value)[0]
-        if(e.indexOf(key) != e.lastIndexOf(key)){
+    let i_list=[]
+    for(let i in e){
+        i_list.push(e[i]['tid'])
+    }
+    i_list.reverse()
+    while(-value <= i_list.length){
+        key=i_list.slice(value)[0]
+        if(i_list.indexOf(key) != i_list.lastIndexOf(key)){
             return key
         }
         value-=1
