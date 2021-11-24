@@ -1,7 +1,7 @@
 /*
  * @Author: honus
  * @Date: 2021-11-13 23:43:19
- * @LastEditTime: 2021-11-24 18:55:31
+ * @LastEditTime: 2021-11-24 20:52:07
  * @LastEditors: honus
  * @Description: 
  * @FilePath: /CaoLiuPush/app.js
@@ -17,10 +17,10 @@ var chineseConv = require('chinese-conv');
 logger.level = "info";
 
 const base_url='https://t66y.com/'
-const Bot_Token=""                     //bot token
-const Chat_Id=''                       //chat id
-const User_Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
-const Cookie=''                        //cookie or empty
+const Bot_Token=""
+const Chat_Id=''
+const User_Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
+const Cookie=''
 var publish={'tid':0};
 var flag=1
 var key=0
@@ -42,7 +42,7 @@ main()
 let begin=setInterval(() => { 
     if(key==1){
     logger.info('begin loop')
-    setInterval( main ,30000)
+    setInterval( main ,5*60000)
     clearInterval(begin)
     }
 },5000)
@@ -55,19 +55,25 @@ function main(){
     logger.info('begin running')
     flag=0
     const c = new Crawler({
+        rateLimit: 2000,
         callback: (error, res, done) => {
             if (error) {
                 logger.error(error);
             } else {
                 const $ = res.$;
-                //console.info($('#main').text())
+                if($('title').text()=='403 Forbidden'){
+                    logger.error('403 Forbidden')
+                    return
+                }
                 $('tbody tr[class="tr3 t_one tac"]').each(function(){
                     let status=$(this).find('td').first().text().replace(/\r?\n?/g, '').replace(/\s/g,"")
                     let title=$(this).find('h3 a[target="_blank"]').text().replace(/\r?\n?/g, '').replace(/\s/g,"")
                     let author=$(this).find('a[class="bl"]').text().replace(/\r?\n?/g, '').replace(/\s/g,"")
-                    if (author == 'valen'){
-                        return;
-                    }
+
+                    // if (author == 'valen'){
+                    //     return;
+                    // }
+                     
                     let article_url=$(this).find('h3 a[target="_blank"]').attr('href');
                     let author_url=$(this).find('td a[class="bl"]').attr('href');
 
@@ -111,11 +117,13 @@ function main(){
                 return tid_x <= tid_y ? 1:-1
         })
         //logger.info(tmp_list)
+        let maxNumber=getMax(tmp_list)
+        tmp_list=Array.from(new Set(tmp_list))
         let tmp_list_filter=[]
         tmp_list.reverse()
         for(let i in tmp_list){
             tmp_tid=getTid(tmp_list[i]['article_url'])
-            if(tmp_tid > publish['tid']){
+            if(tmp_tid > publish['tid'] && tmp_tid <= maxNumber){
                 publish['tid']=tmp_tid
                 tmp_list_filter.push(tmp_list[i])
             }
@@ -221,10 +229,99 @@ function main(){
         url:'https://t66y.com/thread0806.php?fid=20&search=today',
         forum:'成人文学交流区',
         fid:20
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=2&search=today',
+        forum:'亚洲无码原创区',
+        fid:2
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=15&search=today',
+        forum:'亚洲有码原创区',
+        fid:15
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=4&search=today',
+        forum:'欧美原创区',
+        fid:4
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=5&search=today',
+        forum:'动漫原创区',
+        fid:5
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=25&search=today',
+        forum:'国产原创区',
+        fid:25
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=26&search=today',
+        forum:'中字原创区',
+        fid:26
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=21&search=today',
+        forum:'HTTP下载区',
+        fid:21
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=22&search=today',
+        forum:'在线成人影院',
+        fid:22
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=10&search=today',
+        forum:'草榴影视库',
+        fid:10
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=7&search=today',
+        forum:'技术讨论区',
+        fid:7
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=8&search=today',
+        forum:'新时代的我们',
+        fid:8
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=16&search=today',
+        forum:'达盖尔的旗帜',
+        fid:16
+    },
+    {
+        headers:{'User-Agent': User_Agent,'cookie': Cookie},
+        url:'https://t66y.com/thread0806.php?fid=20&search=today',
+        forum:'成人文学交流区',
+        fid:20
     }
     ]);
 }
 
+function getMax(e){
+    e.sort((a,b)=>{return a-b})
+    let value=-1
+    while(-value <= e.length){
+        key=e.slice(value)[0]
+        if(e.indexOf(key) != e.lastIndexOf(key)){
+            return key
+        }
+        value-=1
+    }
+}
 
 function getTid(url){
     let tid=null
