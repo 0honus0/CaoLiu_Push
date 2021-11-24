@@ -10,3 +10,6 @@
 <3> node app.js 直接运行 或者 使用screen , pm2等守护进程   
 
 [示例群组](https://t.me/CaoLiu_Push)
+
+2.已知Bug  
+管理员审核中帖子无法发出，并且审核通过无法发出
