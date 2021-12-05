@@ -386,7 +386,7 @@ function Publish(tmp){
         
         $('img[iyl-data="http://a.d/adblo_ck.jpg"]').each(function(){
             picture=$(this).attr('ess-data')
-            if(picture.indexOf('gif')==-1){
+            if(picture.indexOf('gif')==-1 && picture.indexOf('ovkwiz.xyz') == -1){
                 picture_url.push(picture)
             } 
         })
