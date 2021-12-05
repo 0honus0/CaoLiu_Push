@@ -10,8 +10,8 @@ logger.level = "info";
 
 const crawler = new Crawler()
 const base_url='https://t66y.com/'
-const Bot_Token="5044414701:AAFGa4D-IM1D1lcT5R53wHXYO48rO7r9LQA"
-const Chat_Id="-1001585471806"
+const Bot_Token=""
+const Chat_Id=""
 const User_Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
 const Cookie='PHPSESSID=hhc40g70dadrtu3fqlrdpcq544; 227c9_ck_info=%2F%09; 227c9_winduser=UwcIAAACaAoICF9SAgFQXlZaU1IBBwEFUlJaWwJRVlIAXlMNB1NdPlsFA1FaCl4BBVcAClMAUFRdDgtRUFILCF9aCAYDCQgB; 227c9_groupid=9; 227c9_lastvisit=0%091637758304%09%2Findex.php%3F'
 var publish={'tid':0};
