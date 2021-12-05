@@ -2,6 +2,7 @@
   "dependencies": {
     "chinese-conv": "^1.0.1",
     "crawler": "^1.3.0",
-    "log4js": "^6.3.0"
+    "log4js": "^6.3.0",
+    "sync-request": "^6.1.0"
   }
 }

@@ -1,26 +1,19 @@
-/*
- * @Author: honus
- * @Date: 2021-11-13 23:43:19
- * @LastEditTime: 2021-11-24 21:35:43
- * @LastEditors: honus
- * @Description: 
- * @FilePath: /CaoLiuPush/app.js
- */
 var Crawler=require("crawler");
-const https = require('https')
 const fs = require('fs')
 var log4js=require("log4js");
 var querystring = require("querystring");
 var logger = log4js.getLogger();
 var chineseConv = require('chinese-conv');
-
+const request = require('sync-request');
+const cheerio = require("cheerio")
 logger.level = "info";
 
+const crawler = new Crawler()
 const base_url='https://t66y.com/'
-const Bot_Token=""
-const Chat_Id=''
+const Bot_Token="5044414701:AAFGa4D-IM1D1lcT5R53wHXYO48rO7r9LQA"
+const Chat_Id="-1001585471806"
 const User_Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
-const Cookie='P'
+const Cookie='PHPSESSID=hhc40g70dadrtu3fqlrdpcq544; 227c9_ck_info=%2F%09; 227c9_winduser=UwcIAAACaAoICF9SAgFQXlZaU1IBBwEFUlJaWwJRVlIAXlMNB1NdPlsFA1FaCl4BBVcAClMAUFRdDgtRUFILCF9aCAYDCQgB; 227c9_groupid=9; 227c9_lastvisit=0%091637758304%09%2Findex.php%3F'
 var publish={'tid':0};
 var flag=1
 var key=0
@@ -42,7 +35,7 @@ main()
 let begin=setInterval(() => { 
     if(key==1){
     logger.info('begin loop')
-    setInterval( main ,5*60000)
+    setInterval( main ,10*60000)
     clearInterval(begin)
     }
 },5000)
@@ -147,9 +140,9 @@ function main(){
             tmp=tmp_list.pop();
             Publish(tmp)
             logger.info((length-tmp_list.length)+'/'+length,tmp['article_url'])
-        },4000);
+        },20000);
     });
-    //两遍是为了防止遗漏，奇怪的bug，等等想办法用别的方法解决吧
+
     c.queue([
     {
         headers:{'User-Agent': User_Agent,'cookie': Cookie},
@@ -354,32 +347,163 @@ function Time(flag,time,now){
 };
 
 function Publish(tmp){
-    text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
-    +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
-    +tmp['time']+"\n直达链接: " + tmp['article_url'].replace('htm_data','htm_mob')+'\n'
-    const options = {
-        hostname: 'api.telegram.org',
-        port: 443,
-        path:  '/bot'+Bot_Token+'/sendMessage?parse_mode=HTML&chat_id='+Chat_Id+"&text=" + querystring.escape(text) +'&disable_web_page_preview=1',
-        method: 'GET'
-      }
-    const req = https.request(options, res => {
-        res.on('data', d => {
-            let res=JSON.parse(d)
-            if(res['ok']==false){
-                logger.error('send failed')
-                logger.error(process.stdout.write(d+'\n'))
-                logger.error(tmp)
-                logger.error(text)
-                logger.error(encodeURI(text))
+    tmp['article_url']=tmp['article_url'].replace('data','mob')
+    let url=tmp['article_url']
+
+    if(url.indexOf('read.php')!=-1){
+        content=request('GET',url).getBody().toString()
+        let $=cheerio.load(content)
+        redirect=$('meta[http-equiv="refresh"]').attr('content')
+        redirect=redirect.slice(redirect.indexOf('url=')+4,).replace('data','mob')
+        url=base_url+redirect
+    }
+
+    let html=request('GET',url).getBody().toString()
+    let $=cheerio.load(html)
+
+    let video_url=null
+    let picture_url=null
+    let re=null
+    let hash=null
+    let size=null
+    let torrent=null
+    let text=null
+
+    //video_url
+    try{
+        let src=$('div[class="tpc_cont"] a').last().attr('onclick')
+        index=src.indexOf('src=')
+        video_url=src.slice(index+5,-1)
+    } catch(err){
+        //console.log(err)
+    }
+
+
+    //picture_url
+    try{
+        picture_url=[]
+
+        
+        $('img[iyl-data="http://a.d/adblo_ck.jpg"]').each(function(){
+            picture=$(this).attr('ess-data')
+            if(picture.indexOf('gif')==-1 && picture!='http://ovkwiz.xyz/files/photo/2021/11/10/f7aac22a9430444584e8fa4d3f653a34.jpg'){
+                picture_url.push(picture)
+            } 
+        })
+
+        // $('div[class="tpc_cont"] img').each(function(){
+        //     picture=$(this).attr('ess-data')
+        //     if(picture.indexOf('gif')==-1){
+        //         picture_url.push(picture)
+        //     } 
+        // })
+        picture_url=picture_url.slice(0,2)
+    } catch(err){
+        picture_url=null
+        //console.log(err)
+    }
+
+    //size
+    try{
+        page_content=$('div[class="tpc_cont"]').text()
+        let size_pat=/\d+\.?\d+(M|G)/
+        re=new RegExp(size_pat);
+        size=re.exec(page_content)[0]
+    } catch(err){
+        //console.log(err)
+    }
+
+    //hash
+    try{
+        let href_pat=/hash=\w+/
+        $('a[target="_blank"]').each(function(){
+            href=$(this).attr('href')
+            re=new RegExp(href_pat)
+            hash=re.exec(href)
+            if(hash!=null){
+                hash=hash[0].slice(5,)
+                return false
             }
         })
-      })
-      
-    req.on('error', error => {
-        logger.error(error)
-    }) 
-      req.end()
+        if(hash==null){
+            hash=re.exec($('a[target="_blank"]').text())[0].slice(5,)
+        }
+    } catch(err){
+        //console.log(err)
+    }
+
+    //torrent
+    if(hash!=null){
+        let cookie=request('GET','https://www.rmdown.com/link.php?hash='+hash,{headers:{'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'},retry:true,retryDelay:200,maxRetries:5}).headers['set-cookie']
+        torrent=request('GET','https://www.rmdown.com/download.php?action=magnet&ref='+hash,{headers:{'cookie': cookie,'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'},retry:true,retryDelay:200,maxRetries:5}).body.toString()
+        if(torrent.indexOf('CAPTCHA')!=-1){
+            torrent=null
+        } else {
+            pat=/(magnet:\?xt=urn:btih:[0-9a-fA-F]+.*?)&/
+            re=new RegExp(pat)
+            torrent=re.exec(torrent)[1]
+        }
+
+    }
+
+    logger.info(torrent)
+    logger.info(video_url)
+    logger.info(picture_url)
+    logger.info(size)
+
+
+
+    if(video_url!=null){
+        text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
+        +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
+        +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
+        +"视频链接: " + video_url + '\n'
+    } else if(torrent!=null && size!=null){
+        text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
+        +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
+        +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
+        +"磁力链接: <code>" + torrent +"</code>  \n文件大小: <b>"+size+"</b>"
+    } else if(torrent!=null){
+        text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
+        +"</b>\n发布者: \n时    间: "
+        +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
+        +"磁力链接: <code>" + torrent +"</code>" 
+    } else if(size!=null){
+        text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
+        +"</b>\n发布者: \n时    间: "
+        +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
+        +"文件大小: <b>"+size+"</b>"
+    } else{
+        text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
+        +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
+        +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
+    }
+    logger.info(text)
+
+    send_url='https://api.telegram.org/bot'+Bot_Token+'/sendMessage?parse_mode=HTML&chat_id='+Chat_Id+"&text=" + querystring.escape(text) +'&disable_web_page_preview=1'
+    request('GET',send_url,{retry:true,retryDelay:200,maxRetries:5})
+
+    if(picture_url!=null){
+        if(picture_url.length==1){
+            pic_url=picture_url[0]
+            send_pic_url='https://api.telegram.org/bot'+Bot_Token+'/sendPhoto?&chat_id='+Chat_Id+'&photo='+pic_url
+            console.log(send_pic_url)
+            request('GET',send_pic_url,{retry:true,retryDelay:200,maxRetries:5})
+        } else {
+            pic_url=[]
+            for(let i in picture_url){
+                pic_url.push({"type":"photo","media":picture_url[i]}) 
+            }
+            pic_url=JSON.stringify(pic_url)
+            send_pic_url='https://api.telegram.org/bot'+Bot_Token+'/sendMediaGroup?parse_mode=HTMLL&chat_id='+Chat_Id+'&media='+pic_url
+            console.log(send_pic_url)
+            request('GET',send_pic_url,{retry:true,retryDelay:200,maxRetries:5})
+        }
+    } 
+    //分隔线
+    send_url='https://api.telegram.org/bot'+Bot_Token+'/sendMessage?parse_mode=HTML&chat_id='+Chat_Id+"&text=                  " +'&disable_web_page_preview=1'
+    request('GET',send_url,{retry:true,retryDelay:200,maxRetries:5})
+
 }
 
 Date.prototype.format = function (fmt) {
