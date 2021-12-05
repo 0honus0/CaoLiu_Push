@@ -386,7 +386,7 @@ function Publish(tmp){
         
         $('img[iyl-data="http://a.d/adblo_ck.jpg"]').each(function(){
             picture=$(this).attr('ess-data')
-            if(picture.indexOf('gif')==-1 && picture!='http://ovkwiz.xyz/files/photo/2021/11/10/f7aac22a9430444584e8fa4d3f653a34.jpg'){
+            if(picture.indexOf('gif')==-1){
                 picture_url.push(picture)
             } 
         })
@@ -465,12 +465,12 @@ function Publish(tmp){
         +"磁力链接: <code>" + torrent +"</code>  \n文件大小: <b>"+size+"</b>"
     } else if(torrent!=null){
         text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
-        +"</b>\n发布者: \n时    间: "
+        +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
         +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
         +"磁力链接: <code>" + torrent +"</code>" 
     } else if(size!=null){
         text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
-        +"</b>\n发布者: \n时    间: "
+        +"</b>\n发布者: <a href=\""+tmp['author_url']+"\">"+tmp['author']+"</a>\n时    间: "
         +tmp['time']+"\n直达链接: " + tmp['article_url']+'\n'
         +"文件大小: <b>"+size+"</b>"
     } else{
