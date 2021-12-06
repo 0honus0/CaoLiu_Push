@@ -35,7 +35,7 @@ main()
 let begin=setInterval(() => { 
     if(key==1){
     logger.info('begin loop')
-    setInterval( main ,10*60000)
+    setInterval( main ,5*60000)
     clearInterval(begin)
     }
 },5000)
@@ -375,42 +375,38 @@ function Publish(tmp){
         index=src.indexOf('src=')
         video_url=src.slice(index+5,-1)
     } catch(err){
-        //console.log(err)
     }
 
 
     //picture_url
     try{
         picture_url=[]
-
-        
+        pat=/.*\.gif$/
+        re=new RegExp(pat)
         $('img[iyl-data="http://a.d/adblo_ck.jpg"]').each(function(){
-            picture=$(this).attr('ess-data')
-            if(picture.indexOf('gif')==-1 && picture.indexOf('ovkwiz.xyz') == -1){
-                picture_url.push(picture)
-            } 
-        })
+            data_link=$(this).attr('data-link')
+            if( (data_link!=undefined && data_link.indexOf('game')==-1) || (data_link==undefined)){
+                picture=$(this).attr('ess-data')
+                try{
+                    picture=re.exec(picture)[0]
+                } catch(err){
+                    picture_url.push(picture)
+                }
+            }
 
-        // $('div[class="tpc_cont"] img').each(function(){
-        //     picture=$(this).attr('ess-data')
-        //     if(picture.indexOf('gif')==-1){
-        //         picture_url.push(picture)
-        //     } 
-        // })
+        })
         picture_url=picture_url.slice(0,2)
     } catch(err){
         picture_url=null
-        //console.log(err)
     }
 
     //size
     try{
         page_content=$('div[class="tpc_cont"]').text()
-        let size_pat=/\d+\.?\d+(M|G)/
+        let size_pat=/\d+\.?\d+(|\ )+?(M|G)/
         re=new RegExp(size_pat);
         size=re.exec(page_content)[0]
     } catch(err){
-        //console.log(err)
     }
 
     //hash
@@ -445,13 +441,6 @@ function Publish(tmp){
         }
 
     }
-
-    logger.info(torrent)
-    logger.info(video_url)
-    logger.info(picture_url)
-    logger.info(size)
-
-
 
     if(video_url!=null){
         text="版     块:  <b>#"+tmp['forum']+"</b>\n主     题:  <b>"+chineseConv.sify(tmp['title'].replaceAll('【','[').replaceAll('】',']').replaceAll('<','《').replaceAll('>','》'))
@@ -500,10 +489,6 @@ function Publish(tmp){
             request('GET',send_pic_url,{retry:true,retryDelay:200,maxRetries:5})
         }
     } 
-    //分隔线
-    send_url='https://api.telegram.org/bot'+Bot_Token+'/sendMessage?parse_mode=HTML&chat_id='+Chat_Id+"&text=                  " +'&disable_web_page_preview=1'
-    request('GET',send_url,{retry:true,retryDelay:200,maxRetries:5})
-
 }
 
 Date.prototype.format = function (fmt) {
@@ -532,3 +517,4 @@ Date.prototype.format = function (fmt) {
     }
     return fmt;
 };
+ 
