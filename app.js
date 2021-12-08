@@ -403,7 +403,7 @@ function Publish(tmp){
     //size
     try{
         page_content=$('div[class="tpc_cont"]').text()
-        let size_pat=/\d+\.?\d+(|\ )+?(M|G)/
+        let size_pat=/(|\ )+?\d+\.?\d+(|\ )+?(M|G)/
         re=new RegExp(size_pat);
         size=re.exec(page_content)[0]
     } catch(err){
