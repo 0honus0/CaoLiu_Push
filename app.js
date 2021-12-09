@@ -435,9 +435,13 @@ function Publish(tmp){
         if(torrent.indexOf('CAPTCHA')!=-1){
             torrent=null
         } else {
-            pat=/(magnet:\?xt=urn:btih:[0-9a-fA-F]+.*?)&/
-            re=new RegExp(pat)
-            torrent=re.exec(torrent)[1]
+            try{
+                pat=/(magnet:\?xt=urn:btih:[0-9a-fA-F]+.*?)&/
+                re=new RegExp(pat)
+                torrent=re.exec(torrent)[1]
+            }   catch(err){
+                torrent=null
+            }
         }
 
     }
