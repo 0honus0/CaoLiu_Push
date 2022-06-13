@@ -98,9 +98,9 @@ async def ParseContent(info : 'Info') -> 'Info':
                 info.images = []
                 Imgs = soup.find_all('img')
                 for img in Imgs:
-                    if "src" in str(img):
+                    if ("src" in str(img)) and ("gif" not in str(img)):
                         info.images.append(img.get('src'))
-                    elif "ess-data" in str(img):
+                    elif ("ess-data" in str(img))  and ("gif" not in str(img)):
                         info.images.append(img.get('ess-data'))
                     else:
                         logger.error(f"{img} 图片未处理")
@@ -126,7 +126,7 @@ async def ParseContent(info : 'Info') -> 'Info':
 
             #获取视频链接
             try:
-                Video = soup.find('a' , {"onclick": re.compile("^getElementById\('iframe1'\).src='")}).get("onclick").split("=")[1].replace("/#iframeload ","").replace("'","")
+                Video = "=".join(soup.find('a' , {"onclick": re.compile("^getElementById\('iframe1'\).src='")}).get("onclick").split("=")[1:]).replace("'","")
                 info.video = Video
             except:
                 info.video = None
