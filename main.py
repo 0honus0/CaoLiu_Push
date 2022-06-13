@@ -210,7 +210,7 @@ def Publish(info : 'Info'):
     except Exception as e:
         if FLAG == 0:
             logger.error(f"{ParseContent}")
-            logger.errot(f"{info.images}")
+            logger.error(f"{info.images}")
 
         logger.error(f"{e}")
         TIME = 3 * (FLAG + 1)
