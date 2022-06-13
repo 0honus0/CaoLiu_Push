@@ -1,0 +1,4 @@
+aiohttp==3.8.1
+beautifulsoup4==4.11.1
+python_telegram_bot==13.12
+zhconv==1.4.3
