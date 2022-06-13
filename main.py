@@ -102,6 +102,8 @@ async def ParseContent(info : 'Info') -> 'Info':
                         info.images.append(img.get('src'))
                     elif ("ess-data" in str(img))  and ("gif" not in str(img)):
                         info.images.append(img.get('ess-data'))
+                    elif "gif" in str(img):
+                        pass
                     else:
                         logger.error(f"{img} 图片未处理")
                 if info.images == []:
