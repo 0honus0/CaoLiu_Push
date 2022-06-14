@@ -114,7 +114,7 @@ async def ParseContent(info : 'Info') -> 'Info':
 
             #获取hash并获取torrent链接
             try:   
-                Hash = soup.find('a' , {"href": re.compile(r"^http:\/\/www.rmdown.com\/link.php\?hash=")}).get_text().split('=')[-1]
+                Hash = soup.find('a' , {"href": re.compile(r"^http:\/\/www.rmdown.com\/link.php\?hash=")}).get_text().split('=')[-1].replace("222","",1)
                 info.torrent = f"magnet:?xt=urn:btih:{Hash}"
             except:
                 info.torrent = None
