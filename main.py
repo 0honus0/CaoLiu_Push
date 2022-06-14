@@ -8,6 +8,7 @@ import logging
 from zhconv import convert
 import time
 from datetime import datetime
+import traceback
 
 logger = logging.getLogger('CaoLiuPush')
 logger.setLevel(logging.INFO)
@@ -44,8 +45,8 @@ PidForm = { 4:'欧美原创区',
 
 Bot = telegram.Bot(token=Token)
 PushList = [ 4 , 5 , 7 , 8 , 15 , 16 , 20 , 21 , 22 , 25 , 26 ]
-#记录每个版块的最新帖子
-Content = {}
+#记录最新帖子
+LATEST = "0"
 
 #获取每个版块的最新帖子列表
 async def GetContentByFid(fid : int) -> List['Info']:
@@ -169,7 +170,7 @@ def GetTime(Str : str):
 def Convert(Str : str):
     return Str.replace("【","[").replace("】","]").replace("《","<").replace("》",">")
 
-def Publish(info : 'Info'):
+def Publish(info : 'Info' , SendWithImage : bool = True):
     global TIME
     global FLAG
     global MAXTEST
@@ -192,29 +193,38 @@ def Publish(info : 'Info'):
         PublishContent += Torrent
 
     try:
-        if info.images == None:
+        if not SendWithImage:
             Bot.sendMessage(chat_id = ChatId, text = PublishContent , parse_mode = "Markdown" , disable_web_page_preview = True)
-        elif len(info.images) == 1:
-            Bot.sendPhoto(chat_id = ChatId, photo = info.images[0], caption = PublishContent, parse_mode = "Markdown")
         else:
-            ContentList = []
-            ImagesCount = len(info.images[0:3])
-            for index in range(ImagesCount):
-                if index == 0:
-                    ContentList.append(telegram.InputMediaPhoto(media = info.images[index], caption = PublishContent, parse_mode = "Markdown"))
-                else:
-                    ContentList.append(telegram.InputMediaPhoto(media = info.images[index], caption = None, parse_mode = "Markdown"))
-            Bot.sendMediaGroup(chat_id = ChatId, media = ContentList)
-            TIME += 3 * ImagesCount
+            if info.images == None:
+                Bot.sendMessage(chat_id = ChatId, text = PublishContent , parse_mode = "Markdown" , disable_web_page_preview = True)
+            elif len(info.images) == 1:
+                Bot.sendPhoto(chat_id = ChatId, photo = info.images[0], caption = PublishContent, parse_mode = "Markdown")
+            else:
+                ContentList = []
+                ImagesCount = len(info.images[0:3])
+                for index in range(ImagesCount):
+                    if index == 0:
+                        ContentList.append(telegram.InputMediaPhoto(media = info.images[index], caption = PublishContent, parse_mode = "Markdown"))
+                    else:
+                        ContentList.append(telegram.InputMediaPhoto(media = info.images[index], caption = None, parse_mode = "Markdown"))
+                Bot.sendMediaGroup(chat_id = ChatId, media = ContentList)
+                TIME += 3 * ImagesCount
         time.sleep(TIME)
         FLAG = 0
         TIME = 3
-    except Exception as e:
-        if FLAG == 0:
-            logger.error(f"{PublishContent}")
-            logger.error(f"{info.images}")
-
-        logger.error(f"{e}")
+    except telegram.error.BadRequest:
+        TIME = 3 * (FLAG + 1)
+        if FLAG < MAXTEST:
+            FLAG += 1
+            time.sleep(TIME)
+            Publish(info , False)
+        else:
+            FLAG = 0
+            TIME = 3
+            return False
+    except:
+        traceback.print_exc()
         TIME = 3 * (FLAG + 1)
         if FLAG < MAXTEST:
             FLAG += 1
@@ -225,36 +235,29 @@ def Publish(info : 'Info'):
             TIME = 3
             return False
 
-
-async def Flow(fid : int ) -> List['Info']:
-    infos = await GetContentByFid(fid)
-    infos.sort(key = (lambda x : x.tid))
-    try:
-        Content[fid]
-    except:
-        Content[fid] = 0
-
-    for index in range(len(infos)):
-        if int(infos[index].tid) > int(Content[fid]):
-            infos = infos[index:]
-            Content[fid] = infos[-1].tid
-            break
-
-    logger.debug(f"抓取新内容 {len(infos)}")
-    return infos
-
 async def Main():
+    global LATEST
     task = []
     for fid in PushList:
-        task.append(Flow(fid))
+        task.append(GetContentByFid(fid))
     Result = await asyncio.gather(*task)
     AllContent = []
     for items in Result:
         AllContent.extend(items)
     AllContent.sort(key = (lambda x : x.tid))
 
+    flag = 0
+    for index in range(len(AllContent)):
+        if int(AllContent[index].tid) > int(LATEST):
+            LATEST = int(AllContent[-1].tid)
+            AllContent = AllContent[index:]
+            flag = 1
+            break
+    if flag == 0:
+        AllContent = []
+
     task = []
-    for info in AllContent[-50:]:
+    for info in AllContent:
         task.append(ParseContent(info))
     infos = await asyncio.gather(*task)
 
