@@ -224,7 +224,9 @@ def Publish(info : 'Info' , SendWithImage : bool = True):
             TIME = 3
             return False
     except:
-        traceback.print_exc()
+        if FLAG == 0:
+            logger.error(f"{PublishContent}")
+            logger.error(f"{info.images}")
         TIME = 3 * (FLAG + 1)
         if FLAG < MAXTEST:
             FLAG += 1
