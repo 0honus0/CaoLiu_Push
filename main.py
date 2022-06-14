@@ -121,7 +121,7 @@ async def ParseContent(info : 'Info') -> 'Info':
 
             #如果有文件大小信息,通过正则提取
             try:
-                pat = "((\-|\+)?\d+\.\d+[GMgm]?[Bb]?)"
+                pat = "((\-|\+)?\d+\.?\d+[MmGg][Bb]?)"
                 Size = re.search(pat , soup.get_text("|")).group(0)
                 info.size = Size.strip()
             except:
