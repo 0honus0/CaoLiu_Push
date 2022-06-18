@@ -271,8 +271,8 @@ async def Start():
         endtime = datetime.now()
         runtime = (endtime - starttime).seconds
         logger.debug(f"耗时 {runtime} 秒")
-        if runtime < 5 * 60:
-            await asyncio.sleep(5 * 60 - runtime)
+        if runtime < 10 * 60:
+            await asyncio.sleep(10 * 60 - runtime)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(Start())
