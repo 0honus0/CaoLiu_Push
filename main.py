@@ -49,7 +49,8 @@ PushList = [ 4 , 5 , 7 , 8 , 15 , 16 , 20 , 21 , 22 , 25 , 26 ]
 LATEST = "0"
 
 #获取每个版块的最新帖子列表
-async def GetContentByFid(fid : int) -> List['Info']:
+async def GetContentByFid(fid : int , time : int) -> List['Info']:
+    await asyncio.sleep(time)
     FetchUrl = f"https://t66y.com/thread0806.php?fid={fid}&search=today"
     async with aiohttp.ClientSession(trust_env = True) as session:
         async with session.get(FetchUrl, headers=Headers) as response:
@@ -237,8 +238,10 @@ def Publish(info : 'Info' , SendWithImage : bool = True):
 async def Main():
     global LATEST
     task = []
+    time = 0
     for fid in PushList:
-        task.append(GetContentByFid(fid))
+        task.append(GetContentByFid(fid , time))
+        time += 2
     Result = await asyncio.gather(*task)
     AllContent = []
     for items in Result:
